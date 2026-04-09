@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Účtování">
+  <title>Účtování</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f7;
+      min-height: 100vh;
+      padding: 20px;
+      padding-top: env(safe-area-inset-top, 20px);
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #1d1d1f;
+    }
+    
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #86868b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 17px;
+      border: 1px solid #d2d2d7;
+      border-radius: 10px;
+      background: #fafafa;
+      -webkit-appearance: none;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #007aff;
+      background: white;
+    }
+    
+    .favorites {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .fav-btn {
+      padding: 8px 14px;
+      font-size: 14px;
+      background: #f0f0f5;
+      border: none;
+      border-radius: 8px;
+      color: #1d1d1f;
+      cursor: pointer;
+    }
+    
+    .fav-btn:active {
+      background: #e0e0e5;
+    }
+    
+    .fav-btn.add {
+      background: #e8f4ff;
+      color: #007aff;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    
+    .grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .btn {
+      padding: 14px 8px;
+      font-size: 14px;
+      background: #f0f0f5;
+      border: none;
+      border-radius: 10px;
+      color: #1d1d1f;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    
+    .btn:active {
+      transform: scale(0.96);
+    }
+    
+    .btn.selected {
+      background: #007aff;
+      color: white;
+    }
+    
+    .btn.time {
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .btn.action {
+      background: #34c759;
+      color: white;
+      font-size: 17px;
+      font-weight: 600;
+      padding: 16px;
+      width: 100%;
+      margin-top: 8px;
+    }
+    
+    .btn.action:disabled {
+      background: #c7c7cc;
+    }
+    
+    .btn.secondary {
+      background: #f0f0f5;
+      color: #007aff;
+    }
+    
+    .btn.danger {
+      background: #fff0f0;
+      color: #ff3b30;
+    }
+    
+    .records {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .record {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f5;
+      font-size: 15px;
+    }
+    
+    .record:last-child {
+      border-bottom: none;
+    }
+    
+    .record-text {
+      flex: 1;
+      color: #1d1d1f;
+    }
+    
+    .record-date {
+      font-size: 12px;
+      color: #86868b;
+      margin-bottom: 2px;
+    }
+    
+    .record-delete {
+      padding: 8px 12px;
+      font-size: 13px;
+      background: none;
+      border: none;
+      color: #ff3b30;
+      cursor: pointer;
+    }
+    
+    .empty {
+      text-align: center;
+      color: #86868b;
+      padding: 30px;
+      font-size: 15px;
+    }
+    
+    .actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .counter {
+      text-align: center;
+      font-size: 13px;
+      color: #86868b;
+      margin-top: 8px;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1d1d1f;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 15px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    
+    .toast.show {
+      opacity: 1;
+    }
+
+    .custom-time {
+      display: none;
+      margin-top: 12px;
+    }
+    
+    .custom-time.show {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .custom-time input {
+      flex: 1;
+    }
+    
+    .custom-time button {
+      padding: 14px 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>⏱️ Účtování</h1>
+
+<!-- Kauza -->
+<div class="section">
+  <div class="section-title">Kauza</div>
+  <input type="text" id="kauza" placeholder="Název kauzy...">
+  <div class="favorites" id="favorites"></div>
+</div>
+
+<!-- Úkon -->
+<div class="section">
+  <div class="section-title">Úkon</div>
+  <div class="grid" id="ukony"></div>
+</div>
+
+<!-- Čas -->
+<div class="section">
+  <div class="section-title">Čas</div>
+  <div class="grid grid-2" id="casy"></div>
+  <div class="custom-time" id="customTime">
+    <input type="text" id="customTimeInput" placeholder="0:00">
+    <button class="btn" onclick="setCustomTime()">OK</button>
+  </div>
+</div>
+
+<!-- Přidat -->
+<div class="section">
+  <button class="btn action" id="addBtn" onclick="addRecord()" disabled>Přidat záznam</button>
+</div>
+
+<!-- Záznamy -->
+<div class="section">
+  <div class="section-title">Dnešní záznamy</div>
+  <div class="records" id="records"></div>
+  <div class="counter" id="counter"></div>
+  <div class="actions-row">
+    <button class="btn secondary" onclick="copyAll()">📋 Kopírovat vše</button>
+    <button class="btn danger" onclick="clearAll()">🗑️ Smazat vše</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Data
+const ukony = [
+  'tel stav', 'tel con', 'm stav', 'm con', 'int',
+  'tel jed', 'm jed', 'soud', 'výslech', 'revize',
+  'studium spisu', 'právní rešerše', 'sepis podání', 'sepis smlouvy', 'právní analýza'
+];
+
+const casy = ['0:15', '0:30', '0:45', '1:00', '1:30', '2:00', 'jiný'];
+
+// State
+let selectedUkon = null;
+let selectedCas = null;
+let records = JSON.parse(localStorage.getItem('uctovani_records') || '[]');
+let favorites = JSON.parse(localStorage.getItem('uctovani_favorites') || '[]');
+
+// Render úkony
+function renderUkony() {
+  const container = document.getElementById('ukony');
+  container.innerHTML = ukony.map(u => 
+    `<button class="btn ${selectedUkon === u ? 'selected' : ''}" onclick="selectUkon('${u}')">${u}</button>`
+  ).join('');
+}
+
+// Render časy
+function renderCasy() {
+  const container = document.getElementById('casy');
+  container.innerHTML = casy.map(c => 
+    `<button class="btn time ${selectedCas === c ? 'selected' : ''}" onclick="selectCas('${c}')">${c}</button>`
+  ).join('');
+}
+
+// Render oblíbené kauzy
+function renderFavorites() {
+  const container = document.getElementById('favorites');
+  const favBtns = favorites.map(f => 
+    `<button class="fav-btn" onclick="setKauza('${f}')">${f}</button>`
+  ).join('');
+  container.innerHTML = favBtns + `<button class="fav-btn add" onclick="addFavorite()">+ Přidat</button>`;
+}
+
+// Render záznamy
+function renderRecords() {
+  const container = document.getElementById('records');
+  const counter = document.getElementById('counter');
+  
+  // Filtruj dnešní záznamy
+  const today = new Date().toLocaleDateString('cs-CZ');
+  const todayRecords = records.filter(r => r.date === today);
+  
+  if (todayRecords.length === 0) {
+    container.innerHTML = '<div class="empty">Zatím žádné záznamy</div>';
+    counter.textContent = '';
+    return;
+  }
+  
+  container.innerHTML = todayRecords.map((r, i) => `
+    <div class="record">
+      <div class="record-text">${r.kauza} | ${r.ukon} | ${r.cas}</div>
+      <button class="record-delete" onclick="deleteRecord(${records.indexOf(r)})">✕</button>
+    </div>
+  `).join('');
+  
+  // Spočítej celkový čas
+  let totalMinutes = 0;
+  todayRecords.forEach(r => {
+    const parts = r.cas.split(':');
+    totalMinutes += parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  });
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  counter.textContent = `Celkem: ${hours}:${mins.toString().padStart(2, '0')} (${todayRecords.length} záznamů)`;
+}
+
+// Akce
+function selectUkon(ukon) {
+  selectedUkon = ukon;
+  renderUkony();
+  updateAddBtn();
+}
+
+function selectCas(cas) {
+  if (cas === 'jiný') {
+    document.getElementById('customTime').classList.add('show');
+    selectedCas = null;
+  } else {
+    document.getElementById('customTime').classList.remove('show');
+    selectedCas = cas;
+  }
+  renderCasy();
+  updateAddBtn();
+}
+
+function setCustomTime() {
+  const input = document.getElementById('customTimeInput').value;
+  if (input && input.includes(':')) {
+    selectedCas = input;
+    document.getElementById('customTime').classList.remove('show');
+    renderCasy();
+    updateAddBtn();
+    showToast(`Čas: ${input}`);
+  }
+}
+
+function setKauza(kauza) {
+  document.getElementById('kauza').value = kauza;
+  updateAddBtn();
+}
+
+function addFavorite() {
+  const kauza = document.getElementById('kauza').value.trim();
+  if (kauza && !favorites.includes(kauza)) {
+    favorites.push(kauza);
+    localStorage.setItem('uctovani_favorites', JSON.stringify(favorites));
+    renderFavorites();
+    showToast(`"${kauza}" přidána do oblíbených`);
+  }
+}
+
+function updateAddBtn() {
+  const kauza = document.getElementById('kauza').value.trim();
+  const btn = document.getElementById('addBtn');
+  btn.disabled = !(kauza && selectedUkon && selectedCas);
+}
+
+function addRecord() {
+  const kauza = document.getElementById('kauza').value.trim();
+  if (!kauza || !selectedUkon || !selectedCas) return;
+  
+  const record = {
+    date: new Date().toLocaleDateString('cs-CZ'),
+    kauza: kauza,
+    ukon: selectedUkon,
+    cas: selectedCas
+  };
+  
+  records.push(record);
+  localStorage.setItem('uctovani_records', JSON.stringify(records));
+  
+  // Reset výběru (kauzu nech)
+  selectedUkon = null;
+  selectedCas = null;
+  renderUkony();
+  renderCasy();
+  renderRecords();
+  updateAddBtn();
+  
+  showToast('✓ Záznam přidán');
+}
+
+function deleteRecord(index) {
+  records.splice(index, 1);
+  localStorage.setItem('uctovani_records', JSON.stringify(records));
+  renderRecords();
+}
+
+function copyAll() {
+  const today = new Date().toLocaleDateString('cs-CZ');
+  const todayRecords = records.filter(r => r.date === today);
+  
+  if (todayRecords.length === 0) {
+    showToast('Žádné záznamy ke kopírování');
+    return;
+  }
+  
+  const text = today + '\n' + todayRecords.map(r => 
+    `${r.kauza} | ${r.ukon} | ${r.cas}`
+  ).join('\n');
+  
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('📋 Zkopírováno do schránky');
+  }).catch(() => {
+    // Fallback pro starší zařízení
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Zkopírováno do schránky');
+  });
+}
+
+function clearAll() {
+  if (!confirm('Opravdu smazat všechny dnešní záznamy?')) return;
+  
+  const today = new Date().toLocaleDateString('cs-CZ');
+  records = records.filter(r => r.date !== today);
+  localStorage.setItem('uctovani_records', JSON.stringify(records));
+  renderRecords();
+  showToast('Záznamy smazány');
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// Init
+document.getElementById('kauza').addEventListener('input', updateAddBtn);
+renderUkony();
+renderCasy();
+renderFavorites();
+renderRecords();
+</script>
+
+</body>
+</html>
