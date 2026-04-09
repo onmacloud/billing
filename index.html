@@ -4,15 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Účtování">
-<title>⏱️ Účtování</title>
+<meta name="apple-mobile-web-app-title" content="Billing">
+<title>⏱️ Billing</title>
 </head>
 <body>
 <script type="module">
 
-// ============================================================
-// 
-// ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyDg2i2fcebs1RpCNgP1i_LeIKjh_mmP0AQ",
   authDomain: "billing-bf815.firebaseapp.com",
@@ -21,7 +18,6 @@ const firebaseConfig = {
   messagingSenderId: "553516388461",
   appId: "1:553516388461:web:fe118b157dfa1d30c36f64"
 };
-// ============================================================
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, writeBatch, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -70,7 +66,7 @@ hr{border:none;border-top:.5px solid var(--border);margin:1.4rem 0}
 #toast.show{opacity:1}
 </style>
 <div class="app">
-  <header><h1>⏱️ Účtování</h1><div id="dot"></div></header>
+  <header><h1>⏱️ Billing</h1><div id="dot"></div></header>
   <span class="lbl">kauza</span>
   <input type="text" id="kauza" placeholder="Novák, ABC s.r.o., ...">
   <span class="lbl">úkon</span>
@@ -78,6 +74,8 @@ hr{border:none;border-top:.5px solid var(--border);margin:1.4rem 0}
   <span class="lbl">čas</span>
   <div class="chips" id="tg"></div>
   <input type="text" id="ci" class="chip" placeholder="vlastní (0:45)">
+  <span class="lbl">popis</span>
+  <input type="text" id="popis" placeholder="krátký popis (volitelné)">
   <button id="add" disabled>+ přidat záznam</button>
   <hr>
   <div class="rh"><span class="rl">záznamy</span><span class="rt" id="tot"></span></div>
@@ -122,13 +120,14 @@ function chk(){document.getElementById('add').disabled=!(document.getElementById
 
 document.getElementById('add').onclick=async()=>{
   const k=document.getElementById('kauza').value.trim();
+  const p=document.getElementById('popis').value.trim();
   dot('spin');
   try{
-    await addDoc(collection(db,'records'),{kauza:k,ukon:selUkon,cas:selTime,ts:Date.now(),date:today(),time:nowt()});
+    await addDoc(collection(db,'records'),{kauza:k,ukon:selUkon,cas:selTime,popis:p,ts:Date.now(),date:today(),time:nowt()});
     toast('zapsáno ✓');
     selUkon=null;selTime=null;
     document.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
-    ci.style.display='none';ci.value='';chk();
+    ci.style.display='none';ci.value='';document.getElementById('popis').value='';chk();
   }catch(e){toast('chyba: '+e.message);dot('err')}
 };
 
@@ -142,7 +141,7 @@ onSnapshot(q,snap=>{
   act.style.display='flex';
   let mins=0;recs.forEach(r=>{try{mins+=t2m(r.cas)}catch(e){}});
   tot.textContent=`celkem ${m2t(mins)}`;
-  list.innerHTML=recs.map(r=>`<div class="ri"><div><div class="rm">${esc(r.kauza)} | ${esc(r.ukon)} | ${esc(r.cas)}</div><div class="rs">${esc(r.date)} ${esc(r.time)}</div></div><button class="dx" onclick="delOne('${r.id}')">×</button></div>`).join('');
+  list.innerHTML=recs.map(r=>`<div class="ri"><div><div class="rm">${esc(r.kauza)} | ${esc(r.ukon)} | ${esc(r.cas)}${r.popis?' | '+esc(r.popis):''}</div><div class="rs">${esc(r.date)} ${esc(r.time)}</div></div><button class="dx" onclick="delOne('${r.id}')">×</button></div>`).join('');
   dot('ok');
 },e=>{dot('err');console.error(e)});
 
